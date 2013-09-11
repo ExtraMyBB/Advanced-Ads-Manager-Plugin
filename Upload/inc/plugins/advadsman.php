@@ -44,7 +44,7 @@ if (defined('IN_ADMINCP'))
     {
         return array(
             'name' => 'Advanced Ads Manager',
-            'description' => 'A powerful ads manager it is added to your MyBB board using NewPoints as payment gateway for users.',
+            'description' => 'A powerful ads manager it is added to your MyBB board using multiple payment gateways.',
             'website' => 'http://extramybb.com',
             'author' => 'Surdeanu Mihai',
             'authorsite' => 'http://mybb.ro',
@@ -185,7 +185,7 @@ if (defined('IN_ADMINCP'))
 	 */
     function advadsman_uninstall() 
     {
-        global $db;
+        global $db, $cache;
 
         // rollback all changes made to database
         require_once(ADVADSMAN_PLUGIN_PATH . 'install/queries.php');
@@ -234,9 +234,11 @@ if (defined('IN_ADMINCP'))
         
         // delete all plugin images uploaded by users
         $files = glob(ADVADSMAN_UPLOAD_PATH . '/aam_*');
-        foreach ($files as $file) {
-            if (is_file($file)) {
-                @unlink($file);
+        if (is_array($files)) {
+            foreach ($files as $file) {
+                if (is_file($file)) {
+                    @unlink($file);
+                }
             }
         }
     }
@@ -287,28 +289,8 @@ if (defined('IN_ADMINCP'))
         // rebuild all settings
         rebuild_settings();
 
-        // other MyBB template changes
-        require_once MYBB_ROOT . 'inc/adminfunctions_templates.php';
-        find_replace_templatesets(
-			'headerinclude', 
-			'#' . preg_quote('{$newpmmsg}') . '#', 
-			'{$newpmmsg}' . "\n" . '<script language="javascript" type="text/javascript" src="{$mybb->settings[\'bburl\']}/jscripts/advadsman.js"></script>'
-		);
-        find_replace_templatesets(
-			'postbit', 
-			'#' . preg_quote('{$post[\'message\']}') . '#i', 
-			'{\$post[\'advadsman_ads\']}{\$post[\'message\']}'
-		);
-        find_replace_templatesets(
-			'postbit_classic', 
-			'#' . preg_quote('{$post[\'message\']}') . '#i', 
-			'{\$post[\'advadsman_ads\']}{\$post[\'message\']}'
-		);
-		
-        if (function_exists('advadsman_add_templatesets')) {
-            advadsman_add_templatesets('header', '{advadsman_z1}', 'end');
-            advadsman_add_templatesets('footer', '{advadsman_z3}', 'begin');
-        }
+        // make some core template changes
+        advadsman_insert_templates();
     }
 
 	/*
@@ -323,41 +305,17 @@ if (defined('IN_ADMINCP'))
 
         // delete all settings from database
         $db->delete_query('settinggroups', "name = 'advadsman_group'");
-        $db->delete_query('settings', "name LIKE 'advadsman_settings_%'");
+        $db->delete_query('settings', "name LIKE 'advadsman_setting_%'");
+
 
         // rebuild MyBB core settings
         rebuild_settings();
 
         // cache use by modificaion will be also deleted
         $db->delete_query('datacache', "title = 'advadsman_cache'");
-
-        // rollback changes done into MyBB core templates
-        require_once MYBB_ROOT . 'inc/adminfunctions_templates.php';
-        find_replace_templatesets(
-			'headerinclude', 
-			'#' . preg_quote("\n" . '<script language="javascript" type="text/javascript" src="{$mybb->settings[\'bburl\']}/jscripts/advadsman.js"></script>') . '#', 
-			'', 0
-		);
-        find_replace_templatesets(
-			'postbit', 
-			'#' . preg_quote('{$post[\'advadsman_ads\']}') . '#i', 
-			'', 0
-		);
-        find_replace_templatesets(
-			'postbit_classic', 
-			'#' . preg_quote('{$post[\'advadsman_ads\']}') . '#i', 
-			'', 0
-		);
-        find_replace_templatesets(
-			'header', 
-			'#' . preg_quote('{advadsman_z1}') . '#', 
-			'', 0
-		);
-        find_replace_templatesets(
-			'footer', 
-			'#' . preg_quote('{advadsman_z3}') . '#', 
-			'', 0
-		);
+        
+        // remove all changes done into MyBB core templates
+        advadsman_remove_templates();
     }
 
     /*
@@ -698,7 +656,7 @@ if (defined('IN_ADMINCP'))
             if ($zones) {
                 foreach ($zones as $zid => $zone) {
                     // if everything is fine then add zone
-                    $prices[] = $zone['name'] . ' : ' . newpoints_format_points($zone['points']);
+                    $prices[] = $zone['name'] . ' : ' . number_format($zone['points'], 2);
                     $options .= '<option value="' . $zid . '">' . $zone['name'] . ' (' . $zone['maxdimension'] . ' px)</option>';
                 }
             }
@@ -762,11 +720,11 @@ if (defined('IN_ADMINCP'))
 
             // take points from user
             if (function_exists('newpoints_addpoints')) {
-                newpoints_addpoints((int)$mybb->user['uid'], -number_format($amount, intval($mybb->settings['newpoints_main_decimal'])));
+                newpoints_addpoints((int)$mybb->user['uid'], -number_format($amount, 2));
             } else {
                 $db->update_query(
                     'users', 
-                    array('newpoints' => 'newpoints - ' . number_format($amount, intval($mybb->settings['newpoints_main_decimal']))),
+                    array('newpoints' => 'newpoints - ' . number_format($amount, 2)),
                     "uid = '" . (int) $mybb->user['uid'] . "'",
                     TRUE
                 );
@@ -1030,9 +988,9 @@ if (defined('IN_ADMINCP'))
 	 */
     function advadsman_canview() 
     {
-        global $cache;
+        global $mybb;
 
-		$datacache = $cache->read('usergroups');
+		$datacache = $mybb->cache->read('usergroups');
         $permissions = $datacache[$mybb->user['usergroup']];
 		if (isset($permissions['advadsman_whodenyview']) && $permissions['advadsman_whodenyview'] == 1) {
 			return FALSE;
@@ -1051,9 +1009,9 @@ if (defined('IN_ADMINCP'))
 	 */
     function advadsman_canadd() 
     {
-        global $cache;
+        global $mybb;
 
-        $datacache = $cache->read('usergroups');
+        $datacache = $mybb->cache->read('usergroups');
 		$permissions = $datacache[$mybb->user['usergroup']];
 		if (isset($permissions['advadsman_whocanadd']) && $permissions['advadsman_whocanadd'] == 1) {
 			return TRUE;

@@ -48,9 +48,12 @@ $l['advadsman_infos_current'] = 'Current';
 $l['advadsman_infos_recommended'] = 'Recommended';
 $l['advadsman_infos_table'] = 'Permissions for directories';
 
-$l['advadsman_rebuild_cache'] = 'Rebuild cache?';
+$l['advadsman_rebuild_cache'] = 'Do you want to rebuild plugin cache?';
+$l['advadsman_rebuild_template'] = 'Check template changes for current theme?';
 $l['advadsman_rebuild_success'] = 'Cache successfully rebuild!';
-$l['advadsman_rebuild_error'] = 'Error occurred on cache rebuild process!';
+$l['advadsman_rebuild_temp_success'] = 'No problem detected for your current theme!';
+$l['advadsman_rebuild_error'] = 'An error occurred on cache rebuild process!';
+$l['advadsman_rebuild_temp_error'] = 'An error occurred on template process check!';
 
 $l['advadsman_infos_credit'] = 'Team';
 $l['advadsman_infos_credit_name'] = 'Name';

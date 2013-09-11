@@ -181,9 +181,16 @@ function advadsman_adminpage()
 
         if (IS_AJAX) {
             switch($mybb->input['action']) {
-                case 'do_rebuild' :
+                case 'do_rebuild_cache' :
                     advadsman_cache_massupdate();
                     echo $lang->advadsman_rebuild_success;
+                break;
+                case 'do_rebuild_template' :
+                    // firstly, we need to remove all changes
+                    advadsman_remove_templates();
+                    // secondly, we need to add all changes
+                    advadsman_insert_templates();
+                    echo $lang->advadsman_rebuild_temp_success;
                 break;
                 case 'check_strtotime' :
                     if (strtotime($mybb->input['value']) === FALSE) {
@@ -236,7 +243,7 @@ function advadsman_adminpage()
 				});
 				function doRebuildCache() {
                     new Ajax.Request("index.php?module=tools-advadsman", {
-						parameters: { action: "do_rebuild" },
+						parameters: { action: "do_rebuild_cache" },
 						onComplete: function(data) { 
                             if(data.responseText) {
                                 var answer = $("message");
@@ -249,6 +256,27 @@ function advadsman_adminpage()
 						onFailure: function(data) {
                             var answer = $("message");
                             answer.innerHTML = "' . $lang->advadsman_rebuild_error . '";
+                            answer.setStyle("color: #D8000C; background-color: #FFBABA; font-weight: bold; border: 1px solid; padding: 10px 15px 10px 15px;");
+                            answer.appear({ delay: 0.1 });
+                            answer.fade({ duration: 5, from: 1, to: 0 });
+						}
+                    });
+				}
+                function doRebuildTemplate() {
+                    new Ajax.Request("index.php?module=tools-advadsman", {
+						parameters: { action: "do_rebuild_template" },
+						onComplete: function(data) { 
+                            if(data.responseText) {
+                                var answer = $("message");
+								answer.innerHTML = data.responseText;
+								answer.setStyle("color: #4F8A10; background-color: #DFF2BF; font-weight: bold; border: 1px solid; padding: 10px 15px 10px 15px;");
+								answer.appear({ delay: 0.1 });
+								answer.fade({ duration: 5, from: 1, to: 0 });
+                            }
+						},
+						onFailure: function(data) {
+                            var answer = $("message");
+                            answer.innerHTML = "' . $lang->advadsman_rebuild_temp_error . '";
                             answer.setStyle("color: #D8000C; background-color: #FFBABA; font-weight: bold; border: 1px solid; padding: 10px 15px 10px 15px;");
                             answer.appear({ delay: 0.1 });
                             answer.fade({ duration: 5, from: 1, to: 0 });
@@ -288,7 +316,7 @@ function advadsman_adminpage()
             $table->output($lang->advadsman_infos_table);
 
             // rebuild cache
-            echo '<div id="message"></div><div class="form_button_wrapper" style="padding: 10px;"><input type="button" name="check" id="cache_button" value="' . $lang->advadsman_rebuild_cache . '" class="submit_button" onclick="doRebuildCache();" /></div>';
+            echo '<div id="message"></div><div class="form_button_wrapper" style="padding: 10px;"><input type="button" name="check" id="cache_button" value="' . $lang->advadsman_rebuild_cache . '" class="submit_button" onclick="doRebuildCache();" /><br/><input type="button" name="check" id="template_button" value="' . $lang->advadsman_rebuild_template . '" class="submit_button" onclick="doRebuildTemplate();" /></div>';
 
             echo '</div><div class="float_left" style="width:49%;">';
             // intern statistics
@@ -338,12 +366,12 @@ function advadsman_adminpage()
 
             $table->construct_cell('Surdeanu Mihai', array('class' => 'align_center'));
             $table->construct_cell('Product Manager & Developer', array('class' => 'align_center'));
-            $table->construct_cell('<a href="http://mihaisurdeanu.ro" target="_blank">http://mihaisurdeanu.ro</a>', array('class' => 'align_center'));
+            $table->construct_cell('<a href="http://extramybb.com" target="_blank">http://extramybb.com</a>', array('class' => 'align_center'));
             $table->construct_row();
 
             $table->construct_cell('Harald R&#259;zvan', array('class' => 'align_center'));
-            $table->construct_cell('Quality Assurance Specialist', array('class' => 'align_center'));
-            $table->construct_cell('<a href="http://mybb.ro" target="_blank">http://mybb.ro</a>', array('class' => 'align_center'));
+            $table->construct_cell('Developer & Quality Assurance Specialist', array('class' => 'align_center'));
+            $table->construct_cell('<a href="http://extramybb.com" target="_blank">http://extramybb.com</a>', array('class' => 'align_center'));
             $table->construct_row();
 
             // display table

@@ -438,6 +438,126 @@ function advadsman_time_format($seconds, $day = 'days')
 }
 
 /*
+ * Add all changes related with templates into MyBB core system.
+ */
+function advadsman_insert_templates()
+{
+    // other MyBB template changes
+    require_once MYBB_ROOT . 'inc/adminfunctions_templates.php';
+    
+    find_replace_templatesets(
+        'headerinclude', 
+        '#' . preg_quote('{$newpmmsg}') . '#', 
+        '{$newpmmsg}' . "\n" . '<script language="javascript" type="text/javascript" src="{$mybb->settings[\'bburl\']}/jscripts/advadsman.js"></script>'
+    );
+    find_replace_templatesets(
+        'postbit', 
+        '#' . preg_quote('{$post[\'message\']}') . '#i', 
+        '{\$post[\'advadsman_ads\']}{\$post[\'message\']}'
+    );
+    find_replace_templatesets(
+        'postbit_classic', 
+        '#' . preg_quote('{$post[\'message\']}') . '#i', 
+        '{\$post[\'advadsman_ads\']}{\$post[\'message\']}'
+    );
+    advadsman_add_templatesets('header', '{advadsman_z1}', 'end');
+    advadsman_add_templatesets('footer', '{advadsman_z3}', 'begin');
+}
+
+/*
+ * Rollback all changes done into MyBB core templates.
+ */
+function advadsman_remove_templates()
+{
+    require_once MYBB_ROOT . 'inc/adminfunctions_templates.php';
+    
+    find_replace_templatesets(
+        'headerinclude', 
+        '#' . preg_quote("\n" . '<script language="javascript" type="text/javascript" src="{$mybb->settings[\'bburl\']}/jscripts/advadsman.js"></script>') . '#', 
+        '', 0
+    );
+    find_replace_templatesets(
+        'postbit', 
+        '#' . preg_quote('{$post[\'advadsman_ads\']}') . '#i', 
+        '', 0
+    );
+    find_replace_templatesets(
+        'postbit_classic', 
+        '#' . preg_quote('{$post[\'advadsman_ads\']}') . '#i', 
+        '', 0
+    );
+    find_replace_templatesets(
+        'header', 
+        '#' . preg_quote('{advadsman_z1}') . '#', 
+        '', 0
+    );
+    find_replace_templatesets(
+        'footer', 
+        '#' . preg_quote('{advadsman_z3}') . '#', 
+        '', 0
+    );
+}
+
+function advadsman_add_templatesets($title, $code, $position = 'end', $autocreate=1) 
+{
+    global $db;
+    if ($autocreate != 0) {
+        $query = $db->query("
+            SELECT * FROM " . TABLE_PREFIX . "templates 
+            WHERE title = '$title' AND sid = '-2'
+        ");
+        $master = $db->fetch_array($query);
+        $oldmaster = $master['template'];
+        if ($position == 'end') {
+            $master['template'] = $master['template'] . $code;
+        } else {
+            $master['template'] = $code . $master['template'];
+        }
+        if($oldmaster == $master['template']) {
+            return false;
+        }
+        $master['template'] = addslashes($master['template']);
+    }
+    
+    $query = $db->query("
+        SELECT s.sid, t.template, t.tid 
+        FROM ".TABLE_PREFIX."templatesets s 
+        LEFT JOIN ".TABLE_PREFIX."templates t 
+        ON (t.title = '$title' AND t.sid = s.sid)
+    ");
+    
+    while($template = $db->fetch_array($query)) {
+        if ($template['template']) {
+            if ($position == 'end') {
+                $newtemplate = $template['template'] . $code;
+            } else {
+                $newtemplate = $code . $template['template'];
+            }
+            $template['template'] = $newtemplate;
+            $update[] = $template;
+        } else if($autocreate != 0) {
+            $newtemp = array(
+                'title' => $title,
+                'template' => $master['template'],
+                'sid' => $template['sid']
+            );
+            $db->insert_query('templates', $newtemp);
+        }
+    }
+    
+    if(is_array($update)) {
+        foreach($update as $template) {
+            $updatetemp = array(
+                'template' => addslashes($template['template'])
+            );
+            $db->update_query('templates', $updatetemp, "tid = '" . $template['tid'] . "'");
+        }
+    }
+
+    return true;
+}
+
+/*
  * Send private message to an user.
  */
 function advadsman_send_pm($pm, $fromid = 0) 
