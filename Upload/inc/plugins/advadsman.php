@@ -1,13 +1,25 @@
 <?php
 /*
- * ---PLUGIN-----------------------------------
- * Name 	: Advanced Ads Manager
- * Version 	: 1.1.0
- * ---TEAM-------------------------------------
- * Developer: Surdeanu Mihai
- * Tester	: Harald Razvan, Surdeanu Mihai
- * ---COPYRIGHT--------------------------------
- * (C) 2013 ExtraMyBB.com. All rights reserved.
+ * -PLUGIN-----------------------------------------
+ *		Name		: Advanced Ads Manager
+ * 		Version 	: 1.1.0
+ * -TEAM-------------------------------------------
+ * 		Developers	: Baltzatu, Mihu
+ * -LICENSE----------------------------------------
+ *  Copyright (C) 2013  ExtraMyBB.com. All rights reserved.
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 // Direct initialization of this file is not allowed.
@@ -46,7 +58,7 @@ if (defined('IN_ADMINCP'))
 	 */
     function advadsman_install() 
     {
-        global $db;
+        global $db, $cache;
 
         // do some database changes
         $collation = $db->build_create_table_collation();
@@ -91,6 +103,19 @@ if (defined('IN_ADMINCP'))
             'maxdimension' => '728x80',
             'points' => 20
         ));
+
+		if( ! $db->field_exists('advadsman_whocanadd', 'usergroups')) {
+			$db->query('ALTER TABLE ' . TABLE_PREFIX . 'usergroups ADD advadsman_whocanadd TINYINT(1) NOT NULL DEFAULT 1');
+		}
+		if( ! $db->field_exists('advadsman_whodenyview', 'usergroups')) {
+			$db->query('ALTER TABLE ' . TABLE_PREFIX . 'usergroups ADD advadsman_whodenyview TINYINT(1) NOT NULL DEFAULT 0');
+		}
+		
+		// banned users cannot add new spaces
+		$db->query('UPDATE ' . TABLE_PREFIX . 'usergroups SET advadsman_whocanadd = 0 WHERE gid = 7');
+		
+		// update cache immediately
+		$cache->update_usergroups();
 
         // a new template group will be added
         $template_group = array(
@@ -189,6 +214,16 @@ if (defined('IN_ADMINCP'))
                 }
             }
         }
+		
+		if($db->field_exists('advadsman_whocanadd', 'usergroups')) {
+			$db->query('ALTER TABLE ' . TABLE_PREFIX . 'usergroups DROP advadsman_whocanadd');
+		}
+		if($db->field_exists('advadsman_whodenyview', 'usergroups')) {
+			$db->query('ALTER TABLE ' . TABLE_PREFIX . 'usergroups DROP advadsman_whodenyview');
+		}
+		
+		// update cache immediately
+		$cache->update_usergroups();
 
         // rollback all changes related with templates
         $db->delete_query('templategroups', "prefix = 'advadsman'");
@@ -528,7 +563,8 @@ if (defined('IN_ADMINCP'))
 	 */
     function advadsman_enduser() 
     {
-        global $mybb, $db, $lang, $templates, $header, $headerinclude, $extraheader, $footer, $usercpnav;
+        global $mybb, $db, $lang, $templates, $header, $headerinclude, 
+			$extraheader, $footer, $usercpnav, $cache;
 
         if ($mybb->settings['advadsman_setting_enable'] != 1
                 || THIS_SCRIPT != 'usercp.php' || $mybb->input['action'] != 'advadsman') {
@@ -648,8 +684,8 @@ if (defined('IN_ADMINCP'))
             });
             </script>';
             
-            $whocanadd = explode(',', $mybb->settings['advadsman_setting_whocanadd']);
-            if ( ! in_array($mybb->user['usergroup'], $whocanadd)) {
+			// use cache for checking
+			if ( ! advadsman_canadd()) {
                 error($lang->advadsman_error_cannotadd);
             }
 
@@ -679,9 +715,8 @@ if (defined('IN_ADMINCP'))
                 error($lang->advadsman_error_loginrequired);
             }
             
-            // group can add new ad spaces
-            $whocanadd = explode(',', $mybb->settings['advadsman_setting_whocanadd']);
-            if ( ! in_array($mybb->user['usergroup'], $whocanadd)) {
+            // can add new ad spaces?
+			if ( ! advadsman_canadd()) {
                 error($lang->advadsman_error_cannotadd);
             }
 
@@ -752,7 +787,6 @@ if (defined('IN_ADMINCP'))
                 'uid' => (int) $mybb->user['uid'],
                 'date' => TIME_NOW,
                 'expire' => $expire,
-                'groups' => $mybb->settings['advadsman_setting_whodenyview'],
                 'url' => $db->escape_string($mybb->input['url']),
                 'image' => $result['path'],
                 'zone' => (int)$mybb->input['zone'],
@@ -800,8 +834,7 @@ if (defined('IN_ADMINCP'))
                 error($lang->advadsman_error_loginrequired);
             }
             
-            $whocanadd = explode(',', $mybb->settings['advadsman_setting_whocanadd']);
-            if ( ! in_array($mybb->user['usergroup'], $whocanadd)) {
+			if ( ! advadsman_canadd()) {
                 error($lang->advadsman_error_cannotadd);
             }
 
@@ -993,26 +1026,45 @@ if (defined('IN_ADMINCP'))
     }
     
     /*
-	 * Check to see if current user group it is present into "groups" array.
+	 * Check to see if current user group can view an ad space.
 	 */
-    function advadsman_canview($groups) 
+    function advadsman_canview() 
     {
-        global $mybb;
+        global $cache;
 
-        if (empty($groups)) {
-            return TRUE;
+		$datacache = $cache->read('usergroups');
+        $permissions = $datacache[$mybb->user['usergroup']];
+		if (isset($permissions['advadsman_whodenyview']) && $permissions['advadsman_whodenyview'] == 1) {
+			return FALSE;
+		}
+		
+		$permissions = $datacache[$mybb->user['additionalgroups']];
+		if (isset($permissions['advadsman_whodenyview']) && $permissions['advadsman_whodenyview'] == 1) {
+			return FALSE;
 		}
 
-        $gids = explode(',', $groups);
+        return TRUE;
+    }
+	
+	/*
+	 * Check to see if current user group can add a new ad space.
+	 */
+    function advadsman_canadd() 
+    {
+        global $cache;
 
-        $gids_user = explode(',', $mybb->user['additionalgroups']);
-        $gids_user[] = $mybb->user['usergroup'];
-
-        if (count(array_intersect($gids_user, $gids)) > 0) {
-            return FALSE;
-        } else {
-            return TRUE;
+        $datacache = $cache->read('usergroups');
+		$permissions = $datacache[$mybb->user['usergroup']];
+		if (isset($permissions['advadsman_whocanadd']) && $permissions['advadsman_whocanadd'] == 1) {
+			return TRUE;
 		}
+		
+		$permissions = $datacache[$mybb->user['additionalgroups']];
+		if (isset($permissions['advadsman_whocanadd']) && $permissions['advadsman_whocanadd'] == 1) {
+			return TRUE;
+		}
+
+        return FALSE;
     }
 }
 

@@ -1,13 +1,25 @@
 <?php
 /*
- * ---PLUGIN-----------------------------------
- * Name 	: Advanced Ads Manager
- * Version 	: 1.1.0
- * ---TEAM-------------------------------------
- * Developer: Surdeanu Mihai
- * Tester	: Harald Razvan, Surdeanu Mihai
- * ---COPYRIGHT--------------------------------
- * (C) 2013 ExtraMyBB.com. All rights reserved.
+ * -PLUGIN-----------------------------------------
+ *		Name		: Advanced Ads Manager
+ * 		Version 	: 1.1.0
+ * -TEAM-------------------------------------------
+ * 		Developers	: Baltzatu, Mihu
+ * -LICENSE----------------------------------------
+ *  Copyright (C) 2013  ExtraMyBB.com. All rights reserved.
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 if ( ! defined('IN_MYBB') || ! defined('ADVADSMAN_VERSION')) {
@@ -47,20 +59,6 @@ function advadsman_install_settings()
         'description' => 'For how many days do we retrive stats from <i>Google Analytics</i>? (Default : 7 days)',
         'optionscode' => 'select\n3=3 days\n7=7 days\n10=10 days',
         'value' => '7'
-    );
-    $settings[] = array(
-        'name' => 'setting_whocanadd',
-        'title' => 'Who can add an advertisement?',
-        'description' => 'Which usergroups IDs can add some advertisements on this board? Please use comma to separate two or more usergroups.(Default : 2,3,4,6)',
-        'optionscode' => 'text',
-        'value' => '2,3,4,6'
-    );
-    $settings[] = array(
-        'name' => 'setting_whodenyview',
-        'title' => 'Who cannot see an advertisement',
-        'description' => 'Which usergroups cannot see an advertisement displayed on this board? Please use comma to separate two or more usergroups.(Default : 3,4,6)',
-        'optionscode' => 'text',
-        'value' => '3,4,6'
     );
     $settings[] = array(
         'name' => 'setting_period',

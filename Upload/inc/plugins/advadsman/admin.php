@@ -1,13 +1,25 @@
 <?php
 /*
- * ---PLUGIN-----------------------------------
- * Name 	: Advanced Ads Manager
- * Version 	: 1.1.0
- * ---TEAM-------------------------------------
- * Developer: Surdeanu Mihai
- * Tester	: Harald Razvan, Surdeanu Mihai
- * ---COPYRIGHT--------------------------------
- * (C) 2013 ExtraMyBB.com. All rights reserved.
+ * -PLUGIN-----------------------------------------
+ *		Name		: Advanced Ads Manager
+ * 		Version 	: 1.1.0
+ * -TEAM-------------------------------------------
+ * 		Developers	: Baltzatu, Mihu
+ * -LICENSE----------------------------------------
+ *  Copyright (C) 2013  ExtraMyBB.com. All rights reserved.
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 // Directly access will not be allowed.
@@ -108,6 +120,51 @@ function advadsman_admin_permissions(&$admin_permissions)
     $lang->load('advadsman', false, true);
 
     $admin_permissions['advadsman'] = $lang->advadsman_permissions_canmanage;
+}
+
+$plugins->add_hook('admin_user_groups_edit_graph_tabs', 'advadsman_group_permissions_tab');
+/*
+ * Creates a new permissions tab for each usergroup.
+ */
+function advadsman_group_permissions_tab(&$tab)
+{
+	global $lang;
+
+	$lang->load('advadsman');
+	$tab['advadsman'] = $lang->advadsman_mod_title;
+}
+	
+$plugins->add_hook('admin_user_groups_edit_graph', 'advadsman_group_permissions');
+/*
+ * Edit user group permissions related with this plugin.
+ */
+function advadsman_group_permissions()
+{
+	global $lang, $form, $mybb;
+
+	$lang->load('advadsman');
+
+	echo '<div id="tab_advadsman">';
+	$form_container = new FormContainer($lang->advadsman_mod_title);
+	$advadsman_options = array(
+		$form->generate_check_box('advadsman_whocanadd', 1, $lang->advadsman_whocanadd, array("checked" => (int)$mybb->input['advadsman_whocanadd'])),
+		$form->generate_check_box('advadsman_whodenyview', 1, $lang->advadsman_whodenyview, array("checked" => (int)$mybb->input['advadsman_whodenyview']))
+	);
+	$form_container->output_row($lang->advadsman_mod_title, "", "<div class=\"group_settings_bit\">" . @implode("</div><div class=\"group_settings_bit\">", $advadsman_options) . "</div>");
+	$form_container->end();
+	echo '</div>';
+}
+	
+$plugins->add_hook('admin_user_groups_edit_commit', 'advadsman_group_permissions_save');
+/*
+ * Commit all changes after editing user group permissions.
+ */
+function advadsman_group_permissions_save()
+{
+	global $mybb, $updated_group;
+
+	$updated_group['advadsman_whocanadd'] = (int)$mybb->input['advadsman_whocanadd'];
+	$updated_group['advadsman_whodenyview'] = (int)$mybb->input['advadsman_whodenyview'];
 }
 
 $plugins->add_hook('admin_load', 'advadsman_adminpage');
@@ -702,7 +759,6 @@ function advadsman_adminpage()
                     'uid' => 0,
                     'date' => TIME_NOW,
                     'expire' => $expire,
-                    'groups' => $mybb->settings['advadsman_setting_whodenyview'],
                     'url' => $db->escape_string($mybb->input['url']),
                     'image' => $result['path'],
                     'zone' => (int)$mybb->input['zone'],
