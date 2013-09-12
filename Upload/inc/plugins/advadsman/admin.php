@@ -37,7 +37,6 @@ define('IS_AJAX', isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
 	strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
 
 $plugins->add_hook('admin_home_menu_quick_access', 'advadsman_admin_quick_access');
-// Metoda adauga pe pagina principala din Admin CP un link catre modificare
 /*
  * Quick access from AdminCP homepage to modification settings.
  */
@@ -167,6 +166,54 @@ function advadsman_group_permissions_save()
 	$updated_group['advadsman_whodenyview'] = (int)$mybb->input['advadsman_whodenyview'];
 }
 
+$plugins->add_hook('admin_page_output_footer', 'advadsman_settings_footer');
+function advadsman_settings_footer()
+{
+	global $mybb, $db;
+	
+	// we're viewing the settings form but not submitting it
+	if($mybb->input['action'] == 'change' && $mybb->request_method != 'post')
+	{
+		echo '<script type="text/javascript">
+		Event.observe(window, "load", function() {
+			// workaround to avoid doing another database query 
+			if ($("row_setting_advadsman_setting_enable") != undefined) {
+				loadAdvAdsManPeekers();
+			}
+		});
+		function loadAdvAdsManPeekers() {
+			new Peeker($$(".setting_advadsman_setting_gae"), $("row_setting_advadsman_setting_gaad"), /1/, true);
+            new Peeker($$(".setting_advadsman_setting_gae"), $("row_setting_advadsman_setting_gaadtime"), /1/, true);
+			new Peeker($("setting_advadsman_setting_pointsys"), $("row_setting_advadsman_setting_pointsysname"), /other/, false);
+			new Peeker($("setting_advadsman_setting_pointsys"), $("row_setting_advadsman_setting_pointsyscol"), /other/, false);
+		}
+		</script>';
+	}
+}
+
+$plugins->add_hook('admin_config_settings_change', 'advadsman_settings_change');
+function advadsman_settings_change()
+{
+	global $mybb, $db;
+	
+	$updated = $mybb->input['upsetting'];
+	if ($mybb->request_method == 'post' && isset($updated['advadsman_setting_pointsys']) &&
+		($value = $updated['advadsman_setting_pointsys']) != 'none') 
+	{
+		$field = 'newpoints';
+		$table = 'users';
+		if ($value == 'other') {
+			// TO DO
+		} else {
+			// TO DO
+		}
+		
+		if ( ! $db->field_exists($field, $table) {
+			unset($mybb->input['upsetting']['advadsman_setting_pointsys']);
+		}
+	}
+}
+
 $plugins->add_hook('admin_load', 'advadsman_adminpage');
 /*
  * Main administration function.
@@ -188,23 +235,15 @@ function advadsman_adminpage()
                 case 'do_rebuild_template' :
                     // firstly, we need to remove all changes
                     advadsman_remove_templates();
-                    // secondly, we need to add all changes
+                    // secondly, we need to promote all changes
                     advadsman_insert_templates();
                     echo $lang->advadsman_rebuild_temp_success;
                 break;
                 case 'check_strtotime' :
-                    if (strtotime($mybb->input['value']) === FALSE) {
-                        echo 0;
-                    } else {
-                        echo 1;
-                    }
+                    echo ((strtotime($mybb->input['value']) === FALSE) ? 0 : 1);
                 break;
                 case 'check_fileexists' :
-                    if ( ! file_exists('../' . $mybb->input['value'])) {
-                        echo 0;
-                    } else {
-                        echo 1;
-                    }
+                    echo (( ! file_exists('../' . $mybb->input['value'])) ? 0 : 1);
                 break;
             }
             exit();
