@@ -411,7 +411,7 @@ if (defined('IN_ADMINCP'))
             }
 
             // ad zone exists?
-            if (strstr($page, "<!--advadsman_z$zid}-->")) {
+            if (strstr($page, "<!--advadsman_z$zid-->")) {
                 // advertisement present on that zone selected
                 $ad = advadsman_select_ad($zid);
 
