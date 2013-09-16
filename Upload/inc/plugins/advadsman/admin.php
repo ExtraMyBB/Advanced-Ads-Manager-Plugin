@@ -149,7 +149,7 @@ function advadsman_group_permissions()
 		$form->generate_check_box('advadsman_whocanadd', 1, $lang->advadsman_whocanadd, array("checked" => (int)$mybb->input['advadsman_whocanadd'])),
 		$form->generate_check_box('advadsman_whodenyview', 1, $lang->advadsman_whodenyview, array("checked" => (int)$mybb->input['advadsman_whodenyview']))
 	);
-	$form_container->output_row($lang->advadsman_mod_title, "", "<div class=\"group_settings_bit\">" . @implode("</div><div class=\"group_settings_bit\">", $advadsman_options) . "</div>");
+	$form_container->output_row($lang->advadsman_mod_title, "", "<div class=\"group_settings_bit\">" . implode("</div><div class=\"group_settings_bit\">", $advadsman_options) . "</div>");
 	$form_container->end();
 	echo '</div>';
 }
@@ -925,7 +925,7 @@ function advadsman_adminpage()
                     }
                 }
 
-                $groups = @implode(',', $mybb->input['groups']);
+                $groups = implode(',', $mybb->input['groups']);
                 $update['groups'] = $groups;
 
                 $url = $db->escape_string($mybb->input['url']);
@@ -1008,7 +1008,7 @@ function advadsman_adminpage()
                 echo $form->generate_hidden_field('aid', $aid);
 
                 $form_container->output_row($lang->advadsman_ads_edit_uid, $lang->advadsman_ads_edit_uid_desc, $form->generate_text_box('uid', (int) $ad['uid'], array('id' => 'uid')), 'uid');
-                $form_container->output_row($lang->advadsman_ads_edit_groups, $lang->advadsman_ads_edit_groups_desc, $form->generate_group_select('groups[]', @explode(',', $ad['groups']), array('id' => 'groups', 'multiple' => TRUE)), 'groups');
+                $form_container->output_row($lang->advadsman_ads_edit_groups, $lang->advadsman_ads_edit_groups_desc, $form->generate_group_select('groups[]', explode(',', $ad['groups']), array('id' => 'groups', 'multiple' => TRUE)), 'groups');
                 $form_container->output_row($lang->advadsman_ads_edit_url, $lang->advadsman_ads_edit_url_desc, $form->generate_text_box('url', $ad['url'], array('id' => 'url')), 'url');
                 $form_container->output_row($lang->advadsman_ads_edit_image, $lang->advadsman_ads_edit_image_desc, $form->generate_text_box('image', $ad['image'], array('id' => 'image')), 'image');
                 $lang->advadsman_ads_edit_relative_desc = $lang->sprintf($lang->advadsman_ads_edit_relative_desc, my_date($mybb->settings['dateformat'], $ad['expire']));

@@ -411,7 +411,7 @@ if (defined('IN_ADMINCP'))
             }
 
             // ad zone exists?
-            if (strstr($page, "<!--advadsman_z$zid-->")) {
+            if (strpos($page, "<!--advadsman_z$zid-->") !== FALSE) {
                 // advertisement present on that zone selected
                 $ad = advadsman_select_ad($zid);
 
@@ -462,7 +462,7 @@ if (defined('IN_ADMINCP'))
         if ($ad) {
             // what kind of zone do we have?
             $zones = advadsman_cache_read('zones');
-            if (!isset($zones[2]) || !isset($zones[2]['posts'])) {
+            if ( ! isset($zones[2]) ||  ! isset($zones[2]['posts'])) {
                 $posts = 0;
             } else {
                 $posts = (int) $zones[2]['posts'];
@@ -529,7 +529,7 @@ if (defined('IN_ADMINCP'))
         if ( ! $mybb->input['method']) 
         {
             // Google Analytics stats are displayed?
-            $gaad = @explode(',', $mybb->settings['advadsman_setting_gaad']);
+            $gaad = explode(',', $mybb->settings['advadsman_setting_gaad']);
             if ($mybb->settings['advadsman_setting_gae'] == 1 && count($gaad) == 3) {
                 $data = advadsman_cache_analytics($gaad);
 
@@ -654,7 +654,7 @@ if (defined('IN_ADMINCP'))
                     $options .= '<option value="' . $zid . '">' . $zone['name'] . ' (' . $zone['maxdimension'] . ' px)</option>';
                 }
             }
-            $list_prices = @implode(' , ', $prices);
+            $list_prices = implode(' , ', $prices);
             $img1desc = $lang->sprintf($lang->advadsman_space_add_form_img1desc, $mybb->settings['advadsman_setting_validext']);
 
             eval("\$content = \"" . $templates->get('advadsman_space_add') . "\";");
@@ -675,7 +675,7 @@ if (defined('IN_ADMINCP'))
             // good period of time
             $period = (int)$mybb->input['period'];
             $psetting = $mybb->settings['advadsman_setting_period'];
-            $interval = @explode(',', $psetting);
+            $interval = explode(',', $psetting);
             if (is_array($interval) && count($interval) == 2 
                     && $period < $interval[0] || $period > $interval[1]) {
                 error($lang->sprintf($lang->advadsman_error_invalidperiod, $psetting)); 
@@ -792,7 +792,7 @@ if (defined('IN_ADMINCP'))
 
             $period = (int)$mybb->input['period'];
             $psetting = $mybb->settings['advadsman_setting_period'];
-            $interval = @explode(',', $psetting);
+            $interval = explode(',', $psetting);
             if (is_array($interval) && count($interval) == 2 
                     && $period < $interval[0] || $period > $interval[1]) {
                 error($lang->sprintf($lang->advadsman_error_invalidperiod, $psetting)); 
