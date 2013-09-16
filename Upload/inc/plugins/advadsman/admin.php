@@ -234,6 +234,53 @@ function advadsman_configplugins_activate()
 	// TO DO	
 }
 
+function advadsman_get_upgrades() 
+{
+    $upgrades_list = array();
+
+    // which directory will be used
+    $dir = @opendir(ADVADSMAN_PLUGIN_PATH . 'upgrades/');
+
+    // read file by file
+    if ($dir) 
+	{
+        while ($file = readdir($dir)) 
+		{
+            if ($file == '.' || $file == '..') {
+                continue;
+			}
+            
+            if ( ! is_dir(ADVADSMAN_PLUGIN_PATH . 'upgrades/' . $file)) 
+			{
+                $ext = get_extension($file);
+                if ($ext == 'php') {
+                    // check file format
+                    if (preg_match('/upgrade_([0-9]{3})_([0-9]{3})\.php/i', $file, $matches) &&
+                            version_compare($matches[1], str_replace('.', '', ADVADSMAN_VERSION), '==')) {
+                        $upgrades_list[] = array(
+                            'file' => $file,
+                            'from' => $matches[1],
+                            'to' => $matches[2]
+                        );
+                    }
+                }
+            }
+        }
+        
+        // sort using "to" field
+        $lambda = create_function('$a,$b', 
+                'return (intval($a[\'to\']) - intval($b[\'to\']));');
+		// sort keys
+        usort($upgrades_list, $lambda);
+        
+        // close current directory
+        @closedir($dir);
+    }
+	
+    // results are needed
+    return $upgrades_list;
+}
+
 $plugins->add_hook('admin_load', 'advadsman_adminpage');
 /*
  * Main administration function.
@@ -286,6 +333,11 @@ function advadsman_adminpage()
             'link' => 'index.php?module=tools-advadsman&amp;action=ads',
             'description' => $lang->advadsman_ads_desc
         );
+		$sub_tabs['upgrades'] = array(
+            'title' => $lang->advadsman_upgrades,
+            'link' => 'index.php?module=tools-advadsman&amp;action=upgrades',
+            'description' => $lang->advadsman_upgrades_desc
+		);
         $sub_tabs['logs'] = array(
             'title' => $lang->advadsman_logs,
             'link' => 'index.php?module=tools-advadsman&amp;action=logs',
@@ -1287,6 +1339,109 @@ function advadsman_adminpage()
                 echo "</div>\n";
                 $form->end();
             }
+		} elseif ($mybb->input['action'] == 'upgrades') 
+        {
+            $page->output_header($lang->advadsman_mod_title);
+            $page->output_nav_tabs($sub_tabs, 'upgrades');
+			
+			// get all possible upgrades
+			$upgrades = advadsman_get_upgrades();
+            
+			// table with upgrades
+			$table = new Table;
+			// build header
+			$table->construct_header($lang->advinvsys_upgrades_name, array('width' => '70%'));
+			$table->construct_header($lang->advinvsys_upgrades_controls, array('width' => '30%', 'class' => 'align_center'));
+			if ( ! empty($upgrades)) 
+			{
+				foreach ($upgrades as $upgrade) 
+				{
+					$codename = str_replace(".php", "", $upgrade['file']);
+                
+					$from = array();
+					$to = array();
+					$id = 2;
+					while ($id >= 0) {
+						$from[] = intval($upgrade['from'] / pow(10, $id)) % 10; 
+						$to[] = intval($upgrade['to'] / pow(10, $id)) % 10; 
+						$id--;
+					}
+                
+					// add a new row
+					$table->construct_cell('<a href="http://extramybb.com" target="_blank"><b>' . 
+                        $lang->advadsman_mod_title . '</b></a> (v' . 
+                        implode('.', $from) . ' => v' . implode('.', $to) . ')<br /><i><small>' . 
+                        $lang->created_by . ' ExtraMyBB Team</small></i>');
+					$table->construct_cell("<a href=\"index.php?module=tools-advadsman&amp;action=upgrade_run&amp;upgrade_file=" . $codename . "&amp;my_post_key={$mybb->post_code}\" target=\"_self\">{$lang->advadsman_upgrades_run}</a>", array('class' => 'align_center'));
+					$table->construct_row();
+				}
+			} else {
+				// no upgrades?
+				$table->construct_cell($lang->advadsman_no_upgrades, 
+                    array('colspan' => 2, 'class' => 'align_center'));
+				$table->construct_row();
+			}
+        
+			// display table
+			$table->output($lang->advadsman_upgrades_title);
+		} elseif ($mybb->input['action'] == 'upgrade_run')
+		{
+			if ($mybb->input['no']) {
+				admin_redirect('index.php?module=tools-advadsman&amp;action=upgrades');
+			}
+			if ($mybb->request_method == 'post') 
+			{
+				if ( ! isset($mybb->input['my_post_key']) || 
+						$mybb->post_code != $mybb->input['my_post_key']) {
+					$mybb->request_method = 'get';
+					flash_message($lang->advadsman_error_invalid, 'error');
+					admin_redirect('index.php?module=tools-advadsman&amp;action=upgrades');
+				}
+            
+				// select file
+				$upgrade = htmlspecialchars($mybb->input['upgrade_file']);
+            
+				// include file
+				require_once ADVADSMAN_PLUGIN_PATH . "upgrades/{$upgrade}.php";
+            
+				// call function
+				$runfunction = $upgrade . '_run';
+				if ( ! function_exists($runfunction)) {
+					continue;
+				}
+            
+				$result = $runfunction();
+            
+				// success?
+				if ($result) {
+					flash_message($lang->advadsman_upgrades_success, 'success');
+				} else {
+					flash_message($lang->advadsman_upgrades_error, 'error');
+				}
+            
+				// in ambele cazuri se face aceeasi redirectionare...
+				admin_redirect('index.php?module=tools-advadsman&amp;action=upgrades');
+			} else {
+				// confirmation is required
+				$page->add_breadcrumb_item($lang->advadsman_upgrades_title, 
+                    'index.php?module=tools-advadsman&amp;action=upgrades');
+				$page->output_header($lang->advadsman_upgrades_title);
+            
+				// do cleanup
+				$mybb->input['upgrade_file'] = htmlspecialchars($mybb->input['upgrade_file']);
+            
+				// create a new form
+				$form = new Form("index.php?module=tools-advadsman&amp;action=upgrade_run&amp;upgrade_file=" . $mybb->input['upgrade_file'] . "&amp;my_post_key={$mybb->post_code}", 'post');
+				echo "<div class=\"confirm_action\">\n";
+				echo "<p>{$lang->advadsman_upgrades_confirm}</p>\n";
+				echo "<br />\n";
+				echo "<p class=\"buttons\">\n";
+				echo $form->generate_submit_button($lang->advadsman_buttons_yes, array('class' => 'button_yes'));
+				echo $form->generate_submit_button($lang->advadsman_buttons_no, array("name" => "no", 'class' => 'button_no'));
+				echo "</p>\n";
+				echo "</div>\n";
+				$form->end();
+			}
         } elseif ($mybb->input['action'] == 'logs') 
         {
             $page->output_header($lang->advadsman_mod_title);

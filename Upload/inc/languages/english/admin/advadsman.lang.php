@@ -182,6 +182,17 @@ $l['advadsman_legend_inactive_text'] = 'Advertisement who need first admin aprov
 $l['advadsman_legend_edited'] = 'Brown';
 $l['advadsman_legend_edited_text'] = 'Advertisement who need aprovement after author editing!';
 
+$l['advadsman_upgrades'] = 'Upgrades';
+$l['advadsman_upgrades_desc'] = 'Upgrade plugin from here.';
+$l['advadsman_upgrades_title'] = 'Upgrades Available';
+$l['advadsman_upgrades_name'] = 'Name';
+$l['advadsman_upgrades_controls'] = 'Controls';
+$l['advadsman_upgrades_run'] = 'Run';
+$l['advadsman_no_upgrades'] = 'No upgrades found.';
+$l['advadsman_upgrades_confirm'] = 'Are you sure you want to run the selected upgrade file?';
+$l['advadsman_upgrades_success'] = 'Upgrade script ran successfully.';
+$l['advadsman_upgrades_error'] = 'An error occurred on upgrade process. Please try again!';
+
 $l['advadsman_logs'] = 'Logs';
 $l['advadsman_logs_desc'] = 'Here can be managed all logs for this plugin.';
 $l['advadsman_logs_action'] = 'Action';
