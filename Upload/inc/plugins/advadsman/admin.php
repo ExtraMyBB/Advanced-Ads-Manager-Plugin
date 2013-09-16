@@ -203,15 +203,35 @@ function advadsman_settings_change()
 		$field = 'newpoints';
 		$table = 'users';
 		if ($value == 'other') {
-			// TO DO
-		} else {
-			// TO DO
+			if (isset($updated['advadsman_setting_pointsyscol'])) {
+				$field = $db->escape_string($updated['advadsman_setting_pointsyscol']);
+			} else {
+				$field = $db->escape_string($mybb->settings['advadsman_setting_pointsyscol']);
+			}
 		}
 		
 		if ( ! $db->field_exists($field, $table) {
 			unset($mybb->input['upsetting']['advadsman_setting_pointsys']);
 		}
 	}
+}
+
+$plugins->add_hook('admin_config_plugins_deactivate_commit', 'advadsman_configplugins_deactivate');
+function advadsman_configplugins_deactivate()
+{
+	global $codename, $mybb;
+	
+	if ($mybb->settings['advadsman_setting_pointsys'] == $codename &&
+		$codename == 'newpoints')
+	{
+		// TO DO
+	}	
+}
+
+$plugins->add_hook('admin_config_plugins_activate_commit', 'advadsman_configplugins_activate');
+function advadsman_configplugins_activate()
+{
+	// TO DO	
 }
 
 $plugins->add_hook('admin_load', 'advadsman_adminpage');
@@ -440,7 +460,7 @@ function advadsman_adminpage()
 
                 // identification code
                 if ($zone['zid'] != 2) {
-                    $table->construct_cell(sprintf('{advadsman_z%s}', $zone['zid']));
+                    $table->construct_cell(sprintf('<!--advadsman_z%s-->', $zone['zid']));
                 } else {
                     $table->construct_cell('$post[\'advadsman_ads\']');
                 }

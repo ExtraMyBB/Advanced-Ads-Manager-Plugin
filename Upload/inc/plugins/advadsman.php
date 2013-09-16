@@ -403,14 +403,15 @@ if (defined('IN_ADMINCP'))
 
         // caching it is used for reading data
         $zones = advadsman_cache_read('zones', 'all');
-        foreach ($zones as $zid => $zone) {
+        foreach ($zones as $zid => $zone) 
+		{
             // for Postbit zone aother function will be used
             if ($zid == 2) {
                 continue;
             }
 
             // ad zone exists?
-            if (strstr($page, "{advadsman_z$zid}")) {
+            if (strstr($page, "<!--advadsman_z$zid}-->")) {
                 // advertisement present on that zone selected
                 $ad = advadsman_select_ad($zid);
 
@@ -420,30 +421,23 @@ if (defined('IN_ADMINCP'))
                     $ad['width'] += 6;
                     eval("\$code = \"" . $templates->get('advadsman_space_code') . "\";");
 
-                    $page = str_replace("{advadsman_z$zid}", "<div align='center'>{$code}</div>", $page);
-
                     // increase number of views
                     advadsman_cache_update('views', $ad['aid'], 1, TRUE);
                 } else {
                     // default image displayed?
-                    if ( ! $ad && isset($imgs[$zid]) && advadsman_canview($mybb->settings['advadsman_setting_whodenyview']) 
-                            && file_exists(ADVADSMAN_UPLOAD_PATH . $imgs[$zid]['img'])) {
+                    if ( ! $ad && isset($imgs[$zid]) && 
+							advadsman_canview($mybb->settings['advadsman_setting_whodenyview']) && 
+							file_exists(ADVADSMAN_UPLOAD_PATH . $imgs[$zid]['img'])) {
                         $ad = $default;
                         $ad['image'] = './uploads/advadsman/' . $imgs[$zid]['img'];
                         $ad['width'] = $imgs[$zid]['width'] + 6;
-                        eval("\$code = \"<div align='center'>" . $templates->get('advadsman_space_code') . "</div>\";");
-                    } else {
-                        $code = '';
+                        eval("\$code = \"" . $templates->get('advadsman_space_code') . "\";");
                     }
-
-                    // nothing to be displayed...
-                    $page = str_replace("{advadsman_z$zid}", $code, $page);
                 }
+				
+				$page = str_replace("<!--advadsman_z$zid-->", "<div align='center'>{$code}</div>", $page);
             }
         }
-
-        // clean template...
-        $page = preg_replace_callback('/{advadsman_z([0-9]*)}/i', create_function('$matches', 'return "";'), $page);
     }
 
     $plugins->add_hook('postbit', 'advadsman_showads1');

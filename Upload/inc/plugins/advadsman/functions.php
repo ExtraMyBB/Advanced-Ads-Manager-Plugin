@@ -30,7 +30,7 @@ if ( ! defined('IN_MYBB') || ! defined('ADVADSMAN_VERSION')) {
 /* UPLOAD SYSTEM */
 
 /*
- * Using this function you can upload one file to your server. It returns
+ * Using this function you can upload one image to your server. It returns
  * the width and the path of image.
  */
 function advadsman_upload_file($file, $maxdimension)
@@ -403,23 +403,6 @@ function advadsman_cache_analytics($gaad)
 /* OTHER FUNCTIONS */
 
 /*
- * Check if "NewPoints" plugin it is installed.
- */
-function advadsman_newpoints_installed()
-{
-    $file = MYBB_ROOT . 'inc/plugins/newpoints.php';
-    if ( ! file_exists($file)) {
-        return FALSE;
-    } else {
-		if ( ! function_exists('newpoints_is_installed')) {
-			require_once $file;
-		}
-		
-		return call_user_func('newpoints_is_installed');
-	}
-}
-
-/*
  * Format number of seconds passed after 1 jan. 1970 into days, hours, minutes and seconds.
  */
 function advadsman_time_format($seconds, $day = 'days')
@@ -460,8 +443,8 @@ function advadsman_insert_templates()
         '#' . preg_quote('{$post[\'message\']}') . '#i', 
         '{\$post[\'advadsman_ads\']}{\$post[\'message\']}'
     );
-    advadsman_add_templatesets('header', '{advadsman_z1}', 'end');
-    advadsman_add_templatesets('footer', '{advadsman_z3}', 'begin');
+    advadsman_add_templatesets('header', '<!--advadsman_z1-->', 'end');
+    advadsman_add_templatesets('footer', '<!--advadsman_z3-->', 'begin');
 }
 
 /*
@@ -488,12 +471,12 @@ function advadsman_remove_templates()
     );
     find_replace_templatesets(
         'header', 
-        '#' . preg_quote('{advadsman_z1}') . '#', 
+        '#' . preg_quote('<!--advadsman_z1-->') . '#', 
         '', 0
     );
     find_replace_templatesets(
         'footer', 
-        '#' . preg_quote('{advadsman_z3}') . '#', 
+        '#' . preg_quote('<!--advadsman_z3-->') . '#', 
         '', 0
     );
 }

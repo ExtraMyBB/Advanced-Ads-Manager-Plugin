@@ -86,7 +86,6 @@ function advadsman_install_settings()
 		'title' => 'Points System',
 		'description' => 'Which points system do you want to integrate with Advanced Ads Manager? If you have another points system you would like to use, choose "Other" and fill in the new options that will appear. (Default : None (Disabled))',
 		'optionscode' => 'select
-myps=MyPS
 newpoints=NewPoints
 other=Other
 none=None (Disabled)',
