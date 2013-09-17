@@ -40,8 +40,8 @@ function advadsman_install_queries($collation)
         `description` varchar(128) NOT NULL default '',
         `maxdimension` varchar(9) NOT NULL default '256x256',
         `points` decimal(12,2) NOT NULL default '0',
-        `posts` int(5) UNSIGNED NOT NULL default '0',
-	    `is_ad` smallint(1) UNSIGNED NOT NULL default '0',
+        `posts` int(3) UNSIGNED NOT NULL default '0',
+	    `is_ad` tinyint(1) UNSIGNED NOT NULL default '0',
         PRIMARY KEY (`zid`)) ENGINE=MyISAM{$collation}";
     
     $queries['table:advadsman_ads'] = "CREATE TABLE `" . TABLE_PREFIX . "advadsman_ads` (
@@ -49,7 +49,6 @@ function advadsman_install_queries($collation)
         `uid` bigint(30) UNSIGNED NOT NULL default '0',
         `date` bigint(30) UNSIGNED NOT NULL default '0',
         `expire` bigint(30) UNSIGNED NOT NULL default '0',
-        `groups` varchar(128) NOT NULL default '',
         `url` varchar(64) NOT NULL default '',
         `urlc` varchar(64) NOT NULL default '',
         `image` varchar(24) NOT NULL default '',
@@ -58,7 +57,7 @@ function advadsman_install_queries($collation)
         `width` int(4) UNSIGNED NOT NULL default '0',
         `views` bigint(30) UNSIGNED NOT NULL default '0',
         `clicks` bigint(30) UNSIGNED NOT NULL default '0',
-        `disabled` smallint(1) UNSIGNED NOT NULL default '2',
+        `disabled` tinyint(1) UNSIGNED NOT NULL default '2',
         PRIMARY KEY (`aid`), INDEX(`expire`)) ENGINE=MyISAM{$collation}";
         
     $queries['table:advadsman_logs'] = "CREATE TABLE `" . TABLE_PREFIX . "advadsman_logs` (

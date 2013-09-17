@@ -416,7 +416,7 @@ if (defined('IN_ADMINCP'))
                 $ad = advadsman_select_ad($zid);
 
                 // it is hidden for that user?
-                if ($ad && advadsman_canview($ad['groups'])) {
+                if ($ad && advadsman_canview()) {
                     $ad['pow'] = $default['pow'];
                     $ad['width'] += 6;
                     eval("\$code = \"" . $templates->get('advadsman_space_code') . "\";");
@@ -425,8 +425,7 @@ if (defined('IN_ADMINCP'))
                     advadsman_cache_update('views', $ad['aid'], 1, TRUE);
                 } else {
                     // default image displayed?
-                    if ( ! $ad && isset($imgs[$zid]) && 
-							advadsman_canview($mybb->settings['advadsman_setting_whodenyview']) && 
+                    if ( ! $ad && isset($imgs[$zid]) && advadsman_canview() && 
 							file_exists(ADVADSMAN_UPLOAD_PATH . $imgs[$zid]['img'])) {
                         $ad = $default;
                         $ad['image'] = './uploads/advadsman/' . $imgs[$zid]['img'];
@@ -469,7 +468,7 @@ if (defined('IN_ADMINCP'))
             }
 
             // do we have permissions?
-            if (advadsman_canview($ad['groups'])) {
+            if (advadsman_canview()) {
                 $ad['pow'] = $encrypt;
                 $ad['width'] += 6;
                 eval("\$adcode = \"" . $templates->get('advadsman_space_code') . "\";");
@@ -487,8 +486,7 @@ if (defined('IN_ADMINCP'))
             }
         } else {
             // default image displayed?
-            if (advadsman_canview($mybb->settings['advadsman_setting_whodenyview'])
-                    && ($postcounter - 1) % $mybb->settings['postsperpage'] == 0) {
+            if (advadsman_canview() && ($postcounter - 1) % $mybb->settings['postsperpage'] == 0) {
                 $imgs = json_decode($mybb->settings['advadsman_setting_defaultimgs'], TRUE);
                 if ($imgs == NULL) {
                     $imgs = array();

@@ -74,7 +74,7 @@ function advadsman_admin_quick_access(&$sub_menu)
 
     $sub_menu[] = array(
         'id' => 'advadsman',
-        'title' => $lang->sprintf($lang->advadsman_home, (int) ($zones - $ads)),
+        'title' => $lang->sprintf($lang->advadsman_home, (int)($zones - $ads)),
         'link' => 'index.php?module=tools-advadsman&action=ads'
     );
 }
@@ -146,10 +146,15 @@ function advadsman_group_permissions()
 	echo '<div id="tab_advadsman">';
 	$form_container = new FormContainer($lang->advadsman_mod_title);
 	$advadsman_options = array(
-		$form->generate_check_box('advadsman_whocanadd', 1, $lang->advadsman_whocanadd, array("checked" => (int)$mybb->input['advadsman_whocanadd'])),
-		$form->generate_check_box('advadsman_whodenyview', 1, $lang->advadsman_whodenyview, array("checked" => (int)$mybb->input['advadsman_whodenyview']))
+		$form->generate_check_box('advadsman_whocanadd', 1, 
+				$lang->advadsman_whocanadd, 
+				array('checked' => (int)$mybb->input['advadsman_whocanadd'])),
+		$form->generate_check_box('advadsman_whodenyview', 1, 
+				$lang->advadsman_whodenyview, 
+				array('checked' => (int)$mybb->input['advadsman_whodenyview']))
 	);
-	$form_container->output_row($lang->advadsman_mod_title, "", "<div class=\"group_settings_bit\">" . implode("</div><div class=\"group_settings_bit\">", $advadsman_options) . "</div>");
+	$form_container->output_row($lang->advadsman_mod_title, "", 
+			"<div class=\"group_settings_bit\">" . implode("</div><div class=\"group_settings_bit\">", $advadsman_options) . "</div>");
 	$form_container->end();
 	echo '</div>';
 }
@@ -224,14 +229,11 @@ function advadsman_configplugins_deactivate()
 	if ($mybb->settings['advadsman_setting_pointsys'] == $codename &&
 		$codename == 'newpoints')
 	{
-		// TO DO
+		$db->update_query('settings', array('value' => 'disabled'), "name = 'advadsman_setting_pointsys'");
+		
+		// rebuild all settings
+		rebuild_settings();
 	}	
-}
-
-$plugins->add_hook('admin_config_plugins_activate_commit', 'advadsman_configplugins_activate');
-function advadsman_configplugins_activate()
-{
-	// TO DO	
 }
 
 function advadsman_get_upgrades() 
@@ -256,7 +258,7 @@ function advadsman_get_upgrades()
                 if ($ext == 'php') {
                     // check file format
                     if (preg_match('/upgrade_([0-9]{3})_([0-9]{3})\.php/i', $file, $matches) &&
-                            version_compare($matches[1], str_replace('.', '', ADVADSMAN_VERSION), '==')) {
+                            version_compare($matches[2], str_replace('.', '', ADVADSMAN_VERSION), '==')) {
                         $upgrades_list[] = array(
                             'file' => $file,
                             'from' => $matches[1],
