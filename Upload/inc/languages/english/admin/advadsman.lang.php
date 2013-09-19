@@ -1,12 +1,12 @@
 <?php
 /*
  * -PLUGIN-----------------------------------------
- *		Name		: Advanced Ads Manager
- * 		Version 	: 1.1.0
+ *	Name		: Advanced Ads Manager
+ * 	Version 	: 1.1.0
  * -TEAM-------------------------------------------
- * 		Developers	: Baltzatu, Mihu
+ * 	Developers	: Baltzatu, Mihu
  * -LICENSE----------------------------------------
- *  Copyright (C) 2013  ExtraMyBB.com. All rights reserved.
+ *  Copyright (C) 2013 ExtraMyBB.com. All rights reserved.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -27,6 +27,8 @@ $l['advadsman_home'] = ' Inactive Ads ({1})';
 
 $l['advadsman_mod_confirm'] = 'Confirm action';
 $l['advadsman_mod_confirm_desc'] = 'Are you sure that you want to do this action?';
+$l['advadsman_confirm_newpoints'] = 'You can also set NewPoints as payment gateway for Advanced Ads Manager. Do you want to do that?';
+$l['success_plugin_activatednew'] = 'The selected plugin has been activated successfully and NewPoints has been set as default payment gateway.';
 
 $l['advadsman_error_unknown'] = 'An unknown error occured!';
 $l['advadsman_error_invalid'] = 'Invalid entry!';

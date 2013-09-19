@@ -1,12 +1,12 @@
 <?php
 /*
  * -PLUGIN-----------------------------------------
- *		Name		: Advanced Ads Manager
- * 		Version 	: 1.1.0
+ *	Name		: Advanced Ads Manager
+ * 	Version 	: 1.1.0
  * -TEAM-------------------------------------------
- * 		Developers	: Baltzatu, Mihu
+ * 	Developers	: Baltzatu, Mihu
  * -LICENSE----------------------------------------
- *  Copyright (C) 2013  ExtraMyBB.com. All rights reserved.
+ *  Copyright (C) 2013 ExtraMyBB.com. All rights reserved.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

@@ -1,12 +1,12 @@
 <?php
 /*
  * -PLUGIN-----------------------------------------
- *		Name		: Advanced Ads Manager
- * 		Version 	: 1.1.0
+ *	Name		: Advanced Ads Manager
+ * 	Version 	: 1.1.0
  * -TEAM-------------------------------------------
- * 		Developers	: Baltzatu, Mihu
+ * 	Developers	: Baltzatu, Mihu
  * -LICENSE----------------------------------------
- *  Copyright (C) 2013  ExtraMyBB.com. All rights reserved.
+ *  Copyright (C) 2013 ExtraMyBB.com. All rights reserved.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -88,13 +88,13 @@ function advadsman_install_settings()
 		'optionscode' => 'select
 newpoints=NewPoints
 other=Other
-none=None (Disabled)',
-		'value' => 'none'
+disabled=None (Disabled)',
+		'value' => 'disabled'
 	);
 	$settings[] = array(
 		'name' => 'setting_pointsysname',
 		'title' => 'Custom Points System name',
-		'description' => 'If you want to use a points system that is not supported by default, put the name of it here. The name is the same as the name of the file for the plugin in <em>./inc/plugins/</em>. For example, if the plugin file was called <strong>mypoints.php</strong>, you would put <strong>mypoints</strong> into this setting.',
+		'description' => 'If you want to use a points system that is not supported by default, put the name of it here. (Default : Credits)',
 		'optionscode' => 'text',
 		'value' => ''
 	);

@@ -1,12 +1,12 @@
 <?php
 /*
  * -PLUGIN-----------------------------------------
- *		Name		: Advanced Ads Manager
- * 		Version 	: 1.1.0
+ *	Name		: Advanced Ads Manager
+ * 	Version 	: 1.1.0
  * -TEAM-------------------------------------------
- * 		Developers	: Baltzatu, Mihu
+ * 	Developers	: Baltzatu, Mihu
  * -LICENSE----------------------------------------
- *  Copyright (C) 2013  ExtraMyBB.com. All rights reserved.
+ *  Copyright (C) 2013 ExtraMyBB.com. All rights reserved.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -203,7 +203,7 @@ function advadsman_settings_change()
 	
 	$updated = $mybb->input['upsetting'];
 	if ($mybb->request_method == 'post' && isset($updated['advadsman_setting_pointsys']) &&
-		($value = $updated['advadsman_setting_pointsys']) != 'none') 
+		($value = $updated['advadsman_setting_pointsys']) != 'disabled') 
 	{
 		$field = 'newpoints';
 		$table = 'users';
@@ -215,21 +215,37 @@ function advadsman_settings_change()
 			}
 		}
 		
-		if ( ! $db->field_exists($field, $table) {
+		if ( ! $db->field_exists($field, $table)) {
 			unset($mybb->input['upsetting']['advadsman_setting_pointsys']);
 		}
+	}
+}
+
+$plugins->add_hook('admin_config_plugins_activate_commit', 'advadsman_configplugins_activate');
+function advadsman_configplugins_activate()
+{
+	global $codename, $mybb;
+	
+	// ask user if he wants to set NewPoints as default payment gateway
+	if ($mybb->settings['advadsman_setting_enable'] == 1 && 
+			$codename == 'newpoints' && 
+			$mybb->settings['advadsman_setting_pointsys'] != 'newpoints') {
+		admin_redirect('index.php?module=config-advadsman');
 	}
 }
 
 $plugins->add_hook('admin_config_plugins_deactivate_commit', 'advadsman_configplugins_deactivate');
 function advadsman_configplugins_deactivate()
 {
-	global $codename, $mybb;
-	
+	global $codename, $mybb, $db;
+
 	if ($mybb->settings['advadsman_setting_pointsys'] == $codename &&
 		$codename == 'newpoints')
 	{
-		$db->update_query('settings', array('value' => 'disabled'), "name = 'advadsman_setting_pointsys'");
+		$db->update_query('settings', 
+			array('value' => 'disabled'), 
+			"name = 'advadsman_setting_pointsys'"
+		);
 		
 		// rebuild all settings
 		rebuild_settings();
@@ -291,11 +307,50 @@ function advadsman_adminpage()
 {
     global $db, $lang, $mybb, $page, $run_module, $action_file;
 
-    if ($run_module == 'tools' && $action_file == 'advadsman') 
+	if ($run_module == 'config' && $mybb->input['module'] == 'config-advadsman') 
+	{
+		// action confirmed?
+        if ($mybb->input['no']) {
+			flash_message($lang->success_plugin_activated, 'success');
+			admin_redirect('index.php?module=config-plugins');
+        }
+
+		$lang->load('advadsman', false, true);
+		// set NewPoints as default payment gateway
+        if ($mybb->request_method == 'post') 
+		{
+			$db->update_query('settings', 
+				array('value' => 'newpoints'), 
+				"name = 'advadsman_setting_pointsys'"
+			);
+			
+			// rebuild it is necessary
+			rebuild_settings();
+			
+			flash_message($lang->success_plugin_activatednew, 'success');
+			admin_redirect('index.php?module=config-plugins');
+        } else {
+			$page->output_header($lang->advadsman_mod_title);
+
+            $form = new Form("index.php?module=config-advadsman&amp;my_post_key={$mybb->post_code}", 'post');
+            echo "<div class=\"confirm_action\">\n";
+            echo "<p>{$lang->advadsman_confirm_newpoints}</p>\n";
+            echo "<br />\n";
+            echo "<p class=\"buttons\">\n";
+            echo $form->generate_submit_button($lang->advadsman_buttons_yes, array('class' => 'button_yes'));
+            echo $form->generate_submit_button($lang->advadsman_buttons_no, array("name" => "no", 'class' => 'button_no'));
+            echo "</p>\n";
+            echo "</div>\n";
+            $form->end();
+			
+			$page->output_footer();
+        }
+	} else if ($run_module == 'tools' && $action_file == 'advadsman') 
     {
         $lang->load('advadsman', false, true);
 
-        if (IS_AJAX) {
+        if (IS_AJAX) 
+		{
             switch($mybb->input['action']) {
                 case 'do_rebuild_cache' :
                     advadsman_cache_massupdate();
@@ -312,7 +367,7 @@ function advadsman_adminpage()
                     echo ((strtotime($mybb->input['value']) === FALSE) ? 0 : 1);
                 break;
                 case 'check_fileexists' :
-                    echo (( ! file_exists('../' . $mybb->input['value'])) ? 0 : 1);
+                    echo (( ! file_exists(ADVADSMAN_UPLOAD_PATH . $mybb->input['value'])) ? 0 : 1);
                 break;
             }
             exit();
@@ -510,11 +565,11 @@ function advadsman_adminpage()
             while ($zone = $db->fetch_array($query)) {
                 $table->construct_cell(htmlspecialchars_uni($zone['name']));
                 $table->construct_cell(htmlspecialchars_uni($zone['description']));
-                $table->construct_cell(newpoints_format_points($zone['points']), array('class' => 'align_center'));
+                $table->construct_cell(number_format($zone['points'], 2), array('class' => 'align_center'));
 
                 // identification code
                 if ($zone['zid'] != 2) {
-                    $table->construct_cell(sprintf('<!--advadsman_z%s-->', $zone['zid']));
+                    $table->construct_cell(htmlspecialchars_uni(sprintf('<!--advadsman_z%s-->', $zone['zid'])));
                 } else {
                     $table->construct_cell('$post[\'advadsman_ads\']');
                 }
@@ -880,7 +935,7 @@ function advadsman_adminpage()
                     flash_message($lang->advadsman_ads_doadd_error1, 'error');
                     admin_redirect('index.php?module=tools-advadsman&amp;action=ad_add');
                 }
-                $period = (int) $mybb->input['period'];
+                $period = intval($mybb->input['period']);
                 $zones = advadsman_cache_read('zones');
                 $max = $zones[$mybb->input['zone']];
                 
@@ -902,7 +957,7 @@ function advadsman_adminpage()
                     'expire' => $expire,
                     'url' => $db->escape_string($mybb->input['url']),
                     'image' => $result['path'],
-                    'zone' => (int)$mybb->input['zone'],
+                    'zone' => intval($mybb->input['zone']),
                     'width' => $result['width']
                 );
                 // insert with delay
@@ -988,9 +1043,9 @@ function advadsman_adminpage()
                 }
 
                 $image = $db->escape_string($mybb->input['image']);
-                if (!empty($image) && file_exists(MYBB_ROOT . $image)) {
+                if (!empty($image) && file_exists(ADVADSMAN_UPLOAD_PATH . $image)) {
                     $update['image'] = $image;
-                    $img = @getimagesize(MYBB_ROOT. $image);
+                    $img = @getimagesize(ADVADSMAN_UPLOAD_PATH . $image);
                     $update['width'] = $img[0];
                 }
 
@@ -1093,15 +1148,19 @@ function advadsman_adminpage()
                     admin_redirect('index.php?module=tools-advadsman&amp;action=ads');
                 }
 
-                $add_update = array(
-					'disabled' => '!disabled'
-				);
+				$add_update = array();
+				if ($ad['disabled'] > 0) {
+					$add_update['disabled'] = '0';
+				} else {
+					$add_update['disabled'] = '1';
+				}
+				
                 if ($ad['disabled'] == 2) {
                     $diff = TIME_NOW - $ad['date'];
 					$add_update['expire'] = 'expire + ' . $diff;
                 }
 				
-                $db->update_query('advadsman_ads', $add_update, "aid = '" . (int)$mybb->input['aid'] . "'", true);
+                $db->update_query('advadsman_ads', $add_update, "aid = '" . intval($mybb->input['aid']) . "'", '', true);
 
                 advadsman_cache_massupdate(2);
                 
@@ -1127,7 +1186,7 @@ function advadsman_adminpage()
                 
                 if ($ad['disabled'] == 2) {
                     $additional = '<ul type="square">';
-                    $path = $mybb->settings['bburl'] . '/';
+                    $path = $mybb->settings['bburl'] . '/uploads/advadsman/';
                     $additional .= $lang->sprintf($lang->advadsman_ads_approve_text_features, $ad['zone'], $ad['url'], $path . $ad['image']);
                     $additional .= '</ul>';
                 
@@ -1175,11 +1234,11 @@ function advadsman_adminpage()
                     }
                     if ( ! empty($ad['imagec'])) {
                         // old image will be removed
-                        @unlink(MYBB_ROOT . $ad['image']);
+                        @unlink(ADVADSMAN_UPLOAD_PATH . $ad['image']);
                         // do the transfer
                         $update['image'] = $ad['imagec'];
                         // update image width
-                        $img = @getimagesize(MYBB_ROOT . $ad['imagec']);
+                        $img = @getimagesize(ADVADSMAN_UPLOAD_PATH . $ad['imagec']);
                         $update['width'] = $img[0];
                     }
                 }
@@ -1254,10 +1313,10 @@ function advadsman_adminpage()
                 } else {
                     $row = $db->fetch_array($query);
 
-                    @unlink(MYBB_ROOT . $row['image']);
+                    @unlink(ADVADSMAN_UPLOAD_PATH . $row['image']);
                     $copy = $row['imagec'];
                     if ( ! empty($copy)) {
-                        @unlink(MYBB_ROOT . $copy);
+                        @unlink(ADVADSMAN_UPLOAD_PATH . $copy);
                     }
 
                     $zone = $row['zone'];
@@ -1266,37 +1325,25 @@ function advadsman_adminpage()
                     $back = 0;
                     if ($row['uid'] > 0)
                     {
-                        switch ($case) {
-                            case 1 :
-                                $points = $db->fetch_field($db->simple_select('advadsman_zones', 'points', "zid = '$zone'"), 'points');
-                                $months = number_format(($row['expire'] - TIME_NOW) / 2592000, 2);
-                                if ($months > 0) {
-                                    $back = $points * $months;
-                                }
-                                break;
-                            case 2 :
-                                $points = $db->fetch_field($db->simple_select('advadsman_zones', 'points', "zid = '$zone'"), 'points');
-                                $months = floor(($row['expire'] - $row['date']) / 2592000);
-                                if ($months > 0) {
-                                    $back = $points * $months;
-                                }
-                                break;
+                        if ($case == 1) {
+                            $points = $db->fetch_field($db->simple_select('advadsman_zones', 'points', "zid = '$zone'"), 'points');
+                            $months = number_format(($row['expire'] - TIME_NOW) / 2592000, 2);
+                            if ($months > 0) {
+								$back = $points * $months;
+                            }
+						} else if ($case == 2) {
+                            $points = $db->fetch_field($db->simple_select('advadsman_zones', 'points', "zid = '$zone'"), 'points');
+                            $months = floor(($row['expire'] - $row['date']) / 2592000);
+                            if ($months > 0) {
+                                $back = $points * $months;
+                            }
                         }
                     }
 
                     if ($back > 0) {
-                        if (function_exists('newpoints_addpoints')) {
-                            newpoints_addpoints((int)$row['uid'], number_format($back, intval($mybb->settings['newpoints_main_decimal'])));
-                        } else {
-							$db->update_query(
-								'users', 
-								array('newpoints' => 'newpoints + ' . number_format($back, intval($mybb->settings['newpoints_main_decimal']))), 
-								"uid = '" . (int) $row['uid'] . "'",
-								TRUE
-							); 
-                        }
-                        
-                        advadsman_cache_update('stats', 'total_spend', -number_format($back, intval($mybb->settings['newpoints_main_decimal'])), TRUE);
+						$back = number_format($back, 2);
+						advadsman_pay_points($back, $row['uid']);
+                        advadsman_cache_update('stats', 'total_spend', -$back, TRUE);
                     }
 
                     $db->delete_query('advadsman_ads', "aid = '$aid'");
@@ -1352,8 +1399,8 @@ function advadsman_adminpage()
 			// table with upgrades
 			$table = new Table;
 			// build header
-			$table->construct_header($lang->advinvsys_upgrades_name, array('width' => '70%'));
-			$table->construct_header($lang->advinvsys_upgrades_controls, array('width' => '30%', 'class' => 'align_center'));
+			$table->construct_header($lang->advadsman_upgrades_name, array('width' => '70%'));
+			$table->construct_header($lang->advadsman_upgrades_controls, array('width' => '30%', 'class' => 'align_center'));
 			if ( ! empty($upgrades)) 
 			{
 				foreach ($upgrades as $upgrade) 

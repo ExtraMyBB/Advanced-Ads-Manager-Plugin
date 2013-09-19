@@ -1,12 +1,12 @@
 <?php
 /*
  * -PLUGIN-----------------------------------------
- *		Name		: Advanced Ads Manager
- * 		Version 	: 1.1.0
+ *	Name		: Advanced Ads Manager
+ * 	Version 	: 1.1.0
  * -TEAM-------------------------------------------
- * 		Developers	: Baltzatu, Mihu
+ * 	Developers	: Baltzatu, Mihu
  * -LICENSE----------------------------------------
- *  Copyright (C) 2013  ExtraMyBB.com. All rights reserved.
+ *  Copyright (C) 2013 ExtraMyBB.com. All rights reserved.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -96,7 +96,7 @@ function advadsman_upload_file($file, $maxdimension)
     }
     
     $result = array(
-        'path' => 'uploads/advadsman/' . $filename,
+        'path' => $filename,
         'width' => $width
     );
     
@@ -398,6 +398,46 @@ function advadsman_cache_analytics($gaad)
     } else {
         return advadsman_gapi($gaad, $datacache);
     }
+}
+
+/* PAYMENT SYSTEM */
+function advadsman_pay_points($amount, $uid, $check = FALSE, $disabled = FALSE)
+{
+	global $mybb, $db;
+	
+	// payment option disabled?
+	if ($mybb->settings['advadsman_setting_pointsys'] == 'disabled') {
+		return 'disabled';
+	} else if ($disabled) {
+		return 'no';
+	}
+	
+	// get total user points
+	$points = 0;
+	$field = 'newpoints';
+	$table = 'users';
+	$uid = (int) $uid;
+	if ($mybb->settings['advadsman_setting_pointsys'] == 'other') {
+		$field = $db->escape_string($mybb->settings['advadsman_setting_pointsyscol']);
+		$query = $db->simple_query($table, $field, "uid = '$uid'");
+		$points = number_format($db->fetch_field($query, $field), 2);
+	} else {
+		$points = $mybb->user[$field];
+	}
+	
+	// enough money?
+	if ($amount < $points) {
+		return FALSE;
+	} else {
+		if ($check) {
+			return TRUE;
+		}
+		
+		$amount = number_format($amount, 2);
+		$db->update_query($table, array($field => "$field + $amount"), 
+			"uid = '$uid'", '', TRUE);
+		return TRUE;
+	}
 }
 
 /* OTHER FUNCTIONS */

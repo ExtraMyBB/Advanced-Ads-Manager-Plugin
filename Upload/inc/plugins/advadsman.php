@@ -1,12 +1,12 @@
 <?php
 /*
  * -PLUGIN-----------------------------------------
- *		Name		: Advanced Ads Manager
- * 		Version 	: 1.1.0
+ *	Name		: Advanced Ads Manager
+ * 	Version 	: 1.1.0
  * -TEAM-------------------------------------------
- * 		Developers	: Baltzatu, Mihu
+ * 	Developers	: Baltzatu, Mihu
  * -LICENSE----------------------------------------
- *  Copyright (C) 2013  ExtraMyBB.com. All rights reserved.
+ *  Copyright (C) 2013 ExtraMyBB.com. All rights reserved.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -166,7 +166,7 @@ if (defined('IN_ADMINCP'))
     {
         global $db;
 
-        // at least one database table is missing => uninstalled plugin
+        // if at least one database table is missing => uninstalled plugin
         require_once(ADVADSMAN_PLUGIN_PATH . 'install/queries.php');
         if (function_exists('advadsman_install_check')) {
             $tables = advadsman_install_check();
@@ -307,7 +307,6 @@ if (defined('IN_ADMINCP'))
         $db->delete_query('settinggroups', "name = 'advadsman_group'");
         $db->delete_query('settings', "name LIKE 'advadsman_setting_%'");
 
-
         // rebuild MyBB core settings
         rebuild_settings();
 
@@ -405,7 +404,7 @@ if (defined('IN_ADMINCP'))
         $zones = advadsman_cache_read('zones', 'all');
         foreach ($zones as $zid => $zone) 
 		{
-            // for Postbit zone aother function will be used
+            // for Postbit zone another function will be used
             if ($zid == 2) {
                 continue;
             }
@@ -419,6 +418,7 @@ if (defined('IN_ADMINCP'))
                 if ($ad && advadsman_canview()) {
                     $ad['pow'] = $default['pow'];
                     $ad['width'] += 6;
+					$ad['image'] = './uploads/advadsman/' . $ad['image'];
                     eval("\$code = \"" . $templates->get('advadsman_space_code') . "\";");
 
                     // increase number of views
@@ -468,9 +468,11 @@ if (defined('IN_ADMINCP'))
             }
 
             // do we have permissions?
-            if (advadsman_canview()) {
+            if (advadsman_canview()) 
+			{
                 $ad['pow'] = $encrypt;
                 $ad['width'] += 6;
+				$ad['image'] = './uploads/advadsman/' . $ad['image'];
                 eval("\$adcode = \"" . $templates->get('advadsman_space_code') . "\";");
 
                 // advertisement space displayed in first post of each page
@@ -698,10 +700,15 @@ if (defined('IN_ADMINCP'))
             }
 
             $amount = (float) $zone['points'] * $period;
-            // are utilizatorul destui bani pentru a cumpara spatiul publicitar?
-            if ($mybb->user['newpoints'] < $amount) {
-                error($lang->sprintf($lang->advadsman_error_nomoney, $amount));
-            }
+			if ($zone['points'] > 0) {
+				// enough money to pay?
+				$error = advadsman_pay_points($amount, $mybb->user['uid'], TRUE, FALSE);
+				if ($error == 'disabled') {
+					error($lang->advadsman_error_disabled);
+				} else if ($error == FALSE) {
+					error($lang->sprintf($lang->advadsman_error_nomoney, $amount));
+				}
+			}
 
             // try to upload user image
             $image = $_FILES['imagebrowse'];
@@ -711,21 +718,14 @@ if (defined('IN_ADMINCP'))
             }
 
             // take points from user
-            if (function_exists('newpoints_addpoints')) {
-                newpoints_addpoints((int)$mybb->user['uid'], -number_format($amount, 2));
-            } else {
-                $db->update_query(
-                    'users', 
-                    array('newpoints' => 'newpoints - ' . number_format($amount, 2)),
-                    "uid = '" . (int) $mybb->user['uid'] . "'",
-                    TRUE
-                );
-            }
+            if ($zone['points'] > 0) {
+				advadsman_pay_points(-$amount, $mybb->user['uid']);
+			}
             
             // cache update is required
             advadsman_cache_update(
                 'stats', 'total_spend', 
-                number_format($amount, intval($mybb->settings['newpoints_main_decimal'])),
+                number_format($amount, 2),
                 TRUE
             );
 
@@ -808,40 +808,30 @@ if (defined('IN_ADMINCP'))
             }
 
             $amount = (float) $zone['points'] * $period;
-            // have our user enough money?
-            if ($mybb->user['newpoints'] < $amount) {
-                error($lang->sprintf($lang->advadsman_error_nomoney, $amount));
-            }
-
-            // take user money
-            if (function_exists('newpoints_addpoints')) {
-                newpoints_addpoints((int)$mybb->user['uid'], -number_format($amount, intval($mybb->settings['newpoints_main_decimal'])));
-            } else {
-                $db->update_query(
-                    'users', 
-                    array('newpoints' => 'newpoints - ' . number_format($amount, intval($mybb->settings['newpoints_main_decimal']))),
-                    "uid = '{$uid}'",
-                    TRUE
-                );
+            // there is something to pay?
+            if ($zone['points'] > 0) {
+                // try to take money...
+				$error = advadsman_pay_points($amount, $mybb->user['uid']);
+				if ($error == 'disabled') {
+					error($lang->advadsman_error_disabled);
+				} else if ($error == FALSE) {
+					error($lang->sprintf($lang->advadsman_error_nomoney, $amount));
+				}
             }
             
             // update user cache
-            advadsman_cache_update(
-                'stats', 'total_spend',
-                number_format($amount, intval($mybb->settings['newpoints_main_decimal'])), 
-                TRUE
+            advadsman_cache_update('stats', 'total_spend',
+                number_format($amount, 2), TRUE
             );
 
             // when the space will expire?
             $expire = 30 * 86400 * $period;
 
             // update expire date for that advertisement
-            $db->update_query(
-                    'advadsman_ads', 
-                    array('expire' => "expire + {$expire}"),
-                    "aid = '{$aid}' AND uid = '{$uid}'",
-                    TRUE
-                );
+            $db->update_query('advadsman_ads', 
+				array('expire' => "expire + {$expire}"),
+				"aid = '{$aid}' AND uid = '{$uid}'", TRUE
+            );
 
             redirect('usercp.php?action=advadsman', $lang->advadsman_space_dobuy_success);
         } elseif ($mybb->input['method'] == 'space_buy')
@@ -984,12 +974,14 @@ if (defined('IN_ADMINCP'))
 
 		$datacache = $mybb->cache->read('usergroups');
         $permissions = $datacache[$mybb->user['usergroup']];
-		if (isset($permissions['advadsman_whodenyview']) && $permissions['advadsman_whodenyview'] == 1) {
+		if (isset($permissions['advadsman_whodenyview']) && 
+				$permissions['advadsman_whodenyview'] == 1) {
 			return FALSE;
 		}
 		
 		$permissions = $datacache[$mybb->user['additionalgroups']];
-		if (isset($permissions['advadsman_whodenyview']) && $permissions['advadsman_whodenyview'] == 1) {
+		if (isset($permissions['advadsman_whodenyview']) && 
+				$permissions['advadsman_whodenyview'] == 1) {
 			return FALSE;
 		}
 
@@ -1005,12 +997,14 @@ if (defined('IN_ADMINCP'))
 
         $datacache = $mybb->cache->read('usergroups');
 		$permissions = $datacache[$mybb->user['usergroup']];
-		if (isset($permissions['advadsman_whocanadd']) && $permissions['advadsman_whocanadd'] == 1) {
+		if (isset($permissions['advadsman_whocanadd']) && 
+				$permissions['advadsman_whocanadd'] == 1) {
 			return TRUE;
 		}
 		
 		$permissions = $datacache[$mybb->user['additionalgroups']];
-		if (isset($permissions['advadsman_whocanadd']) && $permissions['advadsman_whocanadd'] == 1) {
+		if (isset($permissions['advadsman_whocanadd']) && 
+				$permissions['advadsman_whocanadd'] == 1) {
 			return TRUE;
 		}
 

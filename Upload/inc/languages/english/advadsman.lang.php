@@ -1,12 +1,12 @@
 <?php
 /*
  * -PLUGIN-----------------------------------------
- *		Name		: Advanced Ads Manager
- * 		Version 	: 1.1.0
+ *	Name		: Advanced Ads Manager
+ * 	Version 	: 1.1.0
  * -TEAM-------------------------------------------
- * 		Developers	: Baltzatu, Mihu
+ * 	Developers	: Baltzatu, Mihu
  * -LICENSE----------------------------------------
- *  Copyright (C) 2013  ExtraMyBB.com. All rights reserved.
+ *  Copyright (C) 2013 ExtraMyBB.com. All rights reserved.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@ $l['advadsman_error_invalidad'] = 'Advertisement specified doesn`t not exist our
 $l['advadsman_error_alreadyedited'] = 'You have already changed this advertisement and, in consequence, you cannot edit until an administrator will approve the first change.';
 $l['advadsman_error_invalidzone'] = 'You have chosed an invalid zone name. Please try again!';
 $l['advadsman_error_invalidurl'] = 'Your specified URL is not correct. Please try again more carrefully!';
+$l['advadsman_error_disabled'] = 'Payment option disabled by an administrator. Only free banners can be added.';
 
 $l['advadsman_stats_show_title'] = 'Board Stats';
 $l['advadsman_stats_show_day'] = 'Day';
@@ -67,7 +68,7 @@ $l['advadsman_space_show_table_edit'] = 'Edit';
 $l['advadsman_space_show_table_extend'] = 'Extend';
 
 $l['advadsman_space_doadd_success'] = 'Your advertising space was successfully added, but now you must wait until one administrator will approve it!';
-$l['advadsman_space_doadd_loga'] = 'Ad space buyed successfully';
+$l['advadsman_space_doadd_loga'] = 'Ad space bought successfully';
 $l['advadsman_space_doadd_logd'] = 'Space purchased for a period of {1} months.';
 
 $l['advadsman_space_add'] = 'Add Advertisement';
