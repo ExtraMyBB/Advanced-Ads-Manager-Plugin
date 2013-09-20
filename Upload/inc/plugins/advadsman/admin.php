@@ -1027,15 +1027,12 @@ function advadsman_adminpage()
                 $update = array();
 
                 $uid = (int) $mybb->input['uid'];
-                if (!empty($uid)) {
+                if ( ! empty($uid)) {
                     $user = get_user($uid);
                     if (is_array($user)) {
                         $update['uid'] = $uid;
                     }
                 }
-
-                $groups = implode(',', $mybb->input['groups']);
-                $update['groups'] = $groups;
 
                 $url = $db->escape_string($mybb->input['url']);
                 if (!empty($url) && filter_var($url, FILTER_VALIDATE_URL)) {
@@ -1117,7 +1114,6 @@ function advadsman_adminpage()
                 echo $form->generate_hidden_field('aid', $aid);
 
                 $form_container->output_row($lang->advadsman_ads_edit_uid, $lang->advadsman_ads_edit_uid_desc, $form->generate_text_box('uid', (int) $ad['uid'], array('id' => 'uid')), 'uid');
-                $form_container->output_row($lang->advadsman_ads_edit_groups, $lang->advadsman_ads_edit_groups_desc, $form->generate_group_select('groups[]', explode(',', $ad['groups']), array('id' => 'groups', 'multiple' => TRUE)), 'groups');
                 $form_container->output_row($lang->advadsman_ads_edit_url, $lang->advadsman_ads_edit_url_desc, $form->generate_text_box('url', $ad['url'], array('id' => 'url')), 'url');
                 $form_container->output_row($lang->advadsman_ads_edit_image, $lang->advadsman_ads_edit_image_desc, $form->generate_text_box('image', $ad['image'], array('id' => 'image')), 'image');
                 $lang->advadsman_ads_edit_relative_desc = $lang->sprintf($lang->advadsman_ads_edit_relative_desc, my_date($mybb->settings['dateformat'], $ad['expire']));
