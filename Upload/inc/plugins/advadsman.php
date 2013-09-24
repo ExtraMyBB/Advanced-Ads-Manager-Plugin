@@ -699,13 +699,13 @@ if (defined('IN_ADMINCP'))
                 error($lang->advadsman_error_invalidzone);
             }
 
-            $amount = (float) $zone['points'] * $period;
+            $amount = floatval($zone['points']) * $period;
 			if ($zone['points'] > 0) {
 				// enough money to pay?
 				$error = advadsman_pay_points($amount, $mybb->user['uid'], TRUE, FALSE);
-				if ($error == 'disabled') {
+				if ($error == 0) {
 					error($lang->advadsman_error_disabled);
-				} else if ($error == FALSE) {
+				} else if ($error == 1) {
 					error($lang->sprintf($lang->advadsman_error_nomoney, $amount));
 				}
 			}
@@ -807,14 +807,14 @@ if (defined('IN_ADMINCP'))
                 error($lang->advadsman_error_invalidzone);
             }
 
-            $amount = (float) $zone['points'] * $period;
+            $amount = floatval($zone['points']) * $period;
             // there is something to pay?
             if ($zone['points'] > 0) {
                 // try to take money...
 				$error = advadsman_pay_points($amount, $mybb->user['uid']);
-				if ($error == 'disabled') {
+				if ($error == 0) {
 					error($lang->advadsman_error_disabled);
-				} else if ($error == FALSE) {
+				} else if ($error == 1) {
 					error($lang->sprintf($lang->advadsman_error_nomoney, $amount));
 				}
             }

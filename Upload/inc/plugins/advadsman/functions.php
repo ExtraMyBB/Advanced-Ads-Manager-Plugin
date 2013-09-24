@@ -401,15 +401,16 @@ function advadsman_cache_analytics($gaad)
 }
 
 /* PAYMENT SYSTEM */
+
 function advadsman_pay_points($amount, $uid, $check = FALSE, $disabled = FALSE)
 {
 	global $mybb, $db;
 	
 	// payment option disabled?
 	if ($mybb->settings['advadsman_setting_pointsys'] == 'disabled') {
-		return 'disabled';
+		return 0;
 	} else if ($disabled) {
-		return 'no';
+		return 2;
 	}
 	
 	// get total user points
@@ -426,17 +427,17 @@ function advadsman_pay_points($amount, $uid, $check = FALSE, $disabled = FALSE)
 	}
 	
 	// enough money?
-	if ($amount < $points) {
-		return FALSE;
+	if ($amount > $points) {
+		return 1;
 	} else {
 		if ($check) {
-			return TRUE;
+			return 2;
 		}
 		
 		$amount = number_format($amount, 2);
 		$db->update_query($table, array($field => "$field + $amount"), 
 			"uid = '$uid'", '', TRUE);
-		return TRUE;
+		return 2;
 	}
 }
 
