@@ -397,7 +397,7 @@ if (defined('IN_ADMINCP'))
         $default = array(
             'aid' => 0,
             'url' => $mybb->settings['advadsman_setting_defaulturls'],
-            'pow' => base64_decode('PGVtPkFkcyBNYW5hZ2VyPC9lbT4gYnkgPGEgaHJlZj0iaHR0cDovL21paGFpc3VyZGVhbnUucm8iIHRhcmdldD0iX2JsYW5rIj5NaWhhaVN1cmRlYW51LnJvPC9hPg==')
+            'pow' => base64_decode('PGVtPkFkcyBNYW5hZ2VyPC9lbT4gYnkgPGEgaHJlZj0iaHR0cDovL2V4dHJhbXliYi5jb20iIHRhcmdldD0iX2JsYW5rIj5FeHRyYU15QkIuY29tPC9hPg==')
         );
 
         // caching it is used for reading data
@@ -455,7 +455,7 @@ if (defined('IN_ADMINCP'))
         // select an ad zone
         $ad = advadsman_select_ad(2);
 
-        $encrypt = base64_decode('PGVtPkFkcyBNYW5hZ2VyPC9lbT4gYnkgPGEgaHJlZj0iaHR0cDovL21paGFpc3VyZGVhbnUucm8iIHRhcmdldD0iX2JsYW5rIj5NaWhhaVN1cmRlYW51LnJvPC9hPg==');
+        $encrypt = base64_decode('PGVtPkFkcyBNYW5hZ2VyPC9lbT4gYnkgPGEgaHJlZj0iaHR0cDovL2V4dHJhbXliYi5jb20iIHRhcmdldD0iX2JsYW5rIj5FeHRyYU15QkIuY29tPC9hPg==');
 
         // selected?
         if ($ad) {
