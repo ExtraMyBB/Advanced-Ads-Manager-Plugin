@@ -431,10 +431,14 @@ if (defined('IN_ADMINCP'))
                         $ad['image'] = './uploads/advadsman/' . $imgs[$zid]['img'];
                         $ad['width'] = $imgs[$zid]['width'] + 6;
                         eval("\$code = \"" . $templates->get('advadsman_space_code') . "\";");
-                    }
+                    } else {
+						$code = '';
+					}
                 }
 				
-				$page = str_replace("<!--advadsman_z$zid-->", "<div align='center'>{$code}</div>", $page);
+				if ( ! empty($code)) {
+					$page = str_replace("<!--advadsman_z$zid-->", "<div align='center'>{$code}</div>", $page);
+				}
             }
         }
     }
