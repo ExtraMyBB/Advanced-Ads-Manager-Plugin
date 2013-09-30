@@ -49,6 +49,7 @@ if (defined('IN_ADMINCP'))
             'author' => 'Surdeanu Mihai',
             'authorsite' => 'http://mybb.ro',
             'version' => ADVADSMAN_VERSION,
+			'guid' => 'a2f9c95a10c2c8162edab00116a6ac63',
             'compatibility' => '16*'
         );
     }
