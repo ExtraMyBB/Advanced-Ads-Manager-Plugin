@@ -189,7 +189,6 @@ function advadsman_settings_footer()
 		function loadAdvAdsManPeekers() {
 			new Peeker($$(".setting_advadsman_setting_gae"), $("row_setting_advadsman_setting_gaad"), /1/, true);
             new Peeker($$(".setting_advadsman_setting_gae"), $("row_setting_advadsman_setting_gaadtime"), /1/, true);
-			new Peeker($("setting_advadsman_setting_pointsys"), $("row_setting_advadsman_setting_pointsysname"), /other/, false);
 			new Peeker($("setting_advadsman_setting_pointsys"), $("row_setting_advadsman_setting_pointsyscol"), /other/, false);
 		}
 		</script>';

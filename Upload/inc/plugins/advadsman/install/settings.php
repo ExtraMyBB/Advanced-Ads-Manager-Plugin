@@ -92,13 +92,6 @@ disabled=None (Disabled)',
 		'value' => 'disabled'
 	);
 	$settings[] = array(
-		'name' => 'setting_pointsysname',
-		'title' => 'Custom Points System name',
-		'description' => 'If you want to use a points system that is not supported by default, put the name of it here. (Default : Credits)',
-		'optionscode' => 'text',
-		'value' => ''
-	);
-	$settings[] = array(
 		'name' => 'setting_pointsyscol',
 		'title' => 'Custom Points System database column',
 		'description' => 'If you want to use a points system that is not supported by default, put the name of the column from the users table which stores the number of points here. If you are unsure what to put here, please contact the author of the points plugin you want to use.',
