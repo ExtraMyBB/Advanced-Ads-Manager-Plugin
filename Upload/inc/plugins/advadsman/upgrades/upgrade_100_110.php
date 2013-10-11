@@ -40,6 +40,13 @@ function upgrade_100_110_run()
 		}
 		
 		// table changes
+		if( ! $db->field_exists('advadsman_whocanadd', 'usergroups')) {
+			$db->query('ALTER TABLE ' . TABLE_PREFIX . 'usergroups ADD advadsman_whocanadd TINYINT(1) NOT NULL DEFAULT 1');
+		}
+		if( ! $db->field_exists('advadsman_whodenyview', 'usergroups')) {
+			$db->query('ALTER TABLE ' . TABLE_PREFIX . 'usergroups ADD advadsman_whodenyview TINYINT(1) NOT NULL DEFAULT 0');
+		}
+
 		$db->modify_column('advadsman_zones', 'name', "varchar(32) NOT NULL default ''");
 		$db->modify_column('advadsman_zones', 'description', "varchar(128) NOT NULL default ''");
 		$db->modify_column('advadsman_zones', 'maxdimension', "varchar(9) NOT NULL default '256x256'");
